@@ -133,8 +133,19 @@ export function createNewStudentProfile(data: {
     `1. High-Performance Full-Stack Service: Implemented modular architecture with Redis caching and PostgreSQL.\n` +
     `2. Microservices Dispatch Engine: Designed asynchronous message processing with automated unit testing.\n`;
 
-  // Calculate high confidence scores based on inputs
-  const vciScore = Math.min(96, Math.max(78, Math.round(75 + numCgpa * 2 + (numAbcCredits > 130 ? 5 : 0))));
+  // Run Zero-Trust Integrity Engine on inputs (AST Code verification, prompt injections, keyword inflation)
+  const integrityAudit = evaluateCandidateIntegrity({
+    name: cleanName,
+    resumeRawText: data.resumeRawText || rawText,
+    githubUsername: cleanGithub,
+    cgpa: numCgpa,
+    apaarId: generatedApaar,
+    explicitAdversarialMode: (data as any).isAdversarialMode || false,
+  });
+
+  const vciScore = integrityAudit.vciScore;
+  const isFlagged = integrityAudit.isFlagged;
+  const digiLockerVerified = !isFlagged && Boolean(data.apaarId && data.apaarId.length > 8);
 
   return {
     id: studentId,
@@ -147,111 +158,116 @@ export function createNewStudentProfile(data: {
     cgpa: numCgpa,
     graduationYear: numGradYear,
     apaarId: generatedApaar,
-    digiLockerVerified: true,
+    digiLockerVerified,
     abcCredits: numAbcCredits,
     vciScore,
     githubUsername: cleanGithub,
-    githubScore: Math.round(vciScore * 0.94),
+    githubScore: isFlagged ? 12 : Math.round(vciScore * 0.94),
     linkedinUrl: data.linkedinUrl?.trim() || `https://linkedin.com/in/${cleanGithub}`,
     portfolioUrl: data.portfolioUrl?.trim() || `https://${cleanGithub}.dev`,
     leetcodeUsername: data.leetcodeUsername?.trim() || `${cleanGithub}_algo`,
     bio:
       data.bio?.trim() ||
-      `Ambitious ${departmentName} candidate focused on scalable software architectures, verified AST codebases, and distributed systems.`,
+      (isFlagged
+        ? `[AUDIT FLAGGED] Candidate claims advanced systems engineering but lacks verified GitHub AST proof-of-work telemetry.`
+        : `Ambitious ${departmentName} candidate focused on scalable software architectures, verified AST codebases, and distributed systems.`),
     resumeFileName: resumeName,
     resumeUploadDate: new Date().toISOString().split("T")[0],
     resumeSizeKb: resumeSize,
     resumeRawText: rawText,
-    projects: [
-      {
-        id: `proj_${timestamp}_1`,
-        title: "Enterprise Full-Stack Cloud Application",
-        description: "High-concurrency web service built with strict AST modularity, automated test suites, and Docker containers.",
-        techStack: ["React", "TypeScript", "Node.js", "PostgreSQL", "Docker"],
-        githubUrl: `https://github.com/${cleanGithub}/enterprise-platform`,
-        liveUrl: `https://${cleanGithub}-app.dev`,
-      },
-      {
-        id: `proj_${timestamp}_2`,
-        title: "Real-Time Telemetry & Asynchronous Queue Processor",
-        description: "Event-driven message pipeline implementing exponential backoff retries and idempotent task execution.",
-        techStack: ["Python", "FastAPI", "Redis", "Docker"],
-        githubUrl: `https://github.com/${cleanGithub}/event-stream-processor`,
-      },
-    ],
-    sandboxCompletionRate: 94,
-    skills: [
-      {
-        name: "React, TypeScript & Modern UI",
-        category: "Frontend",
-        claimedConfidence: 94,
-        verifiedConfidence: 90,
-        source: "GitHub AST",
-        astCommitCount: 310,
-        cyclomaticComplexityAvg: 2.5,
-        testCoverageRatio: 0.86,
-      },
-      {
-        name: "Node.js & Asynchronous Backend",
-        category: "Backend",
-        claimedConfidence: 91,
-        verifiedConfidence: 88,
-        source: "GitHub AST",
-        astCommitCount: 220,
-        cyclomaticComplexityAvg: 3.1,
-        testCoverageRatio: 0.82,
-      },
-      {
-        name: "PostgreSQL & Database Optimization",
-        category: "Data/AI",
-        claimedConfidence: 87,
-        verifiedConfidence: 85,
-        source: "WASM Sandbox",
-        astCommitCount: 140,
-        cyclomaticComplexityAvg: 2.2,
-        testCoverageRatio: 0.8,
-      },
-      {
-        name: "Docker, Linux & Cloud Infrastructure",
-        category: "Cloud/DevOps",
-        claimedConfidence: 83,
-        verifiedConfidence: 80,
-        source: "GitHub AST",
-        astCommitCount: 85,
-        cyclomaticComplexityAvg: 1.8,
-        testCoverageRatio: 0.76,
-      },
-    ],
-    remediationRoadmap: [
-      {
-        id: `REM_${timestamp}_1`,
-        title: "Token Bucket Rate Limiting & Concurrency Synchronization",
-        skillTarget: "API Reliability & Race Conditions",
-        sourceDeficit: "CampusLink AST Verification: Advanced concurrency control",
-        estimatedMinutes: 25,
-        difficulty: "Intermediate",
-        completed: false,
-        ncrfMicroCredits: 0.5,
-      },
-    ],
-    recentApplications: [
-      {
-        jobId: "JOB_9011",
-        company: "Razorpay",
-        role: "Software Development Engineer - Intern",
-        appliedDate: new Date().toISOString().split("T")[0],
-        status: "Verified_Shortlist",
-        vciMatchScore: vciScore,
-      },
-      {
-        jobId: "JOB_9012",
-        company: "Swiggy",
-        role: "Backend Engineer (Campus 2026)",
-        appliedDate: new Date().toISOString().split("T")[0],
-        status: "Interview Scheduled",
-        vciMatchScore: Math.round(vciScore * 0.96),
-      },
-    ],
+    projects: isFlagged
+      ? [
+          {
+            id: `proj_${timestamp}_1`,
+            title: "Claimed Enterprise Microservices (Unverified)",
+            description: "No public GitHub repository commits or AST proof found matching claimed architecture.",
+            techStack: ["Kubernetes", "Kafka", "Distributed Systems"],
+            githubUrl: `https://github.com/${cleanGithub}/unverified-repo`,
+          },
+        ]
+      : [
+          {
+            id: `proj_${timestamp}_1`,
+            title: "Enterprise Full-Stack Cloud Application",
+            description: "High-concurrency web service built with strict AST modularity, automated test suites, and Docker containers.",
+            techStack: ["React", "TypeScript", "Node.js", "PostgreSQL", "Docker"],
+            githubUrl: `https://github.com/${cleanGithub}/enterprise-platform`,
+            liveUrl: `https://${cleanGithub}-app.dev`,
+          },
+          {
+            id: `proj_${timestamp}_2`,
+            title: "Real-Time Telemetry & Asynchronous Queue Processor",
+            description: "Event-driven message pipeline implementing exponential backoff retries and idempotent task execution.",
+            techStack: ["Python", "FastAPI", "Redis", "Docker"],
+            githubUrl: `https://github.com/${cleanGithub}/event-stream-processor`,
+          },
+        ],
+    sandboxCompletionRate: isFlagged ? 15 : 94,
+    skills: integrityAudit.skillsBreakdown,
+    remediationRoadmap: isFlagged
+      ? [
+          {
+            id: `REM_${timestamp}_1`,
+            title: "Mandatory AST Proof: Implement Event Loop & Queue in WASM Sandbox",
+            skillTarget: "Execution Verification Required",
+            sourceDeficit: "Adversarial Check: Missing verifiable AST code commits for claimed skills",
+            estimatedMinutes: 45,
+            difficulty: "Advanced",
+            completed: false,
+            ncrfMicroCredits: 1.0,
+          },
+          {
+            id: `REM_${timestamp}_2`,
+            title: "Connect Verified Public GitHub Repository & Pass Unit Test Suite",
+            skillTarget: "GitHub Commit Telemetry",
+            sourceDeficit: "0 Public AST Commits linked to student handle",
+            estimatedMinutes: 30,
+            difficulty: "Intermediate",
+            completed: false,
+            ncrfMicroCredits: 0.5,
+          },
+        ]
+      : [
+          {
+            id: `REM_${timestamp}_1`,
+            title: "Token Bucket Rate Limiting & Concurrency Synchronization",
+            skillTarget: "API Reliability & Race Conditions",
+            sourceDeficit: "CampusLink AST Verification: Advanced concurrency control",
+            estimatedMinutes: 25,
+            difficulty: "Intermediate",
+            completed: false,
+            ncrfMicroCredits: 0.5,
+          },
+        ],
+    recentApplications: isFlagged
+      ? [
+          {
+            jobId: "JOB_9011",
+            company: "Razorpay",
+            role: "Software Development Engineer - Intern",
+            appliedDate: new Date().toISOString().split("T")[0],
+            status: "Rejected_Round1",
+            vciMatchScore: vciScore,
+          },
+        ]
+      : [
+          {
+            jobId: "JOB_9011",
+            company: "Razorpay",
+            role: "Software Development Engineer - Intern",
+            appliedDate: new Date().toISOString().split("T")[0],
+            status: "Verified_Shortlist",
+            vciMatchScore: vciScore,
+          },
+          {
+            jobId: "JOB_9012",
+            company: "Swiggy",
+            role: "Backend Engineer (Campus 2026)",
+            appliedDate: new Date().toISOString().split("T")[0],
+            status: "Interview Scheduled",
+            vciMatchScore: Math.round(vciScore * 0.96),
+          },
+        ],
     astStats: {
       totalCommits: 680,
       reposAnalyzed: 12,

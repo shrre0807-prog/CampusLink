@@ -33,6 +33,7 @@ import {
   FileCheck,
   UserCheck,
   Plus,
+  AlertTriangle,
 } from "lucide-react";
 import { SAMPLE_STUDENTS } from "../data/mockData";
 import { StudentProfile, RemediationTask, StudentProject } from "../types";
@@ -508,6 +509,70 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
           <span>Remediation &amp; Applications ({student.recentApplications?.length || 0})</span>
         </button>
       </div>
+
+      {/* ADVERSARIAL FRAUD AUDIT CALLOUT (Shown if student is flagged / low VCI) */}
+      {student.vciScore < 40 && (
+        <div className="bg-gradient-to-r from-rose-950/80 via-slate-900 to-amber-950/70 border-2 border-rose-600/60 rounded-2xl p-5 shadow-2xl space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-rose-900/50">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-rose-600/30 border border-rose-500/50 flex items-center justify-center text-rose-400 shrink-0">
+                <AlertTriangle className="w-6 h-6 animate-pulse" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-rose-200 flex items-center gap-2">
+                  <span>ZERO-TRUST INTEGRITY AUDIT: ADVERSARIAL INFLATION DETECTED</span>
+                  <span className="text-[10px] bg-rose-950 text-rose-300 border border-rose-700 px-2 py-0.5 rounded-full font-mono font-normal">
+                    Confidence: Critical Deficit
+                  </span>
+                </h3>
+                <p className="text-xs text-slate-300 mt-0.5">
+                  How CampusLink caught this unverified/fake profile when traditional keyword ATS systems failed:
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 font-mono text-xs">
+              <div className="px-3 py-1 bg-slate-950 border border-slate-700 rounded-lg text-slate-400">
+                Traditional ATS: <strong className="text-emerald-400">98% Match</strong>
+              </div>
+              <div className="px-3 py-1 bg-rose-950 border border-rose-800 rounded-lg text-rose-300">
+                CampusLink VCI: <strong className="text-rose-400 font-extrabold">{student.vciScore}% Verified</strong>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+            <div className="bg-slate-950/80 p-3.5 rounded-xl border border-rose-900/40 space-y-1.5">
+              <div className="font-bold text-rose-300 flex items-center gap-1.5">
+                <span className="w-5 h-5 rounded-full bg-rose-900/80 flex items-center justify-center text-[10px] text-white">1</span>
+                <span>AST Code Telemetry Deficit</span>
+              </div>
+              <p className="text-[11px] text-slate-400 leading-relaxed">
+                Resume claims enterprise competencies (Kubernetes, Kafka, Distributed Systems), but GitHub AST analysis found <strong>0 commits, 0 test suites, and 0 AST syntax trees</strong>.
+              </p>
+            </div>
+
+            <div className="bg-slate-950/80 p-3.5 rounded-xl border border-rose-900/40 space-y-1.5">
+              <div className="font-bold text-amber-300 flex items-center gap-1.5">
+                <span className="w-5 h-5 rounded-full bg-amber-900/80 flex items-center justify-center text-[10px] text-white">2</span>
+                <span>White-Font &amp; Prompt Injection Trap</span>
+              </div>
+              <p className="text-[11px] text-slate-400 leading-relaxed">
+                CampusLink&apos;s raw text tokenizer extracted hidden system override directives that bypass naive keyword scrapers but trigger immediate zero-trust penalties.
+              </p>
+            </div>
+
+            <div className="bg-slate-950/80 p-3.5 rounded-xl border border-rose-900/40 space-y-1.5">
+              <div className="font-bold text-cyan-300 flex items-center gap-1.5">
+                <span className="w-5 h-5 rounded-full bg-cyan-900/80 flex items-center justify-center text-[10px] text-white">3</span>
+                <span>DigiLocker &amp; Sandbox Gate</span>
+              </div>
+              <p className="text-[11px] text-slate-400 leading-relaxed">
+                Unverified candidate is blocked from enterprise recruiter shortlists until they pass live interactive coding verification in the browser WASM sandbox.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* TAB 1: OVERVIEW & AST SKILLS MATRIX */}
       {activeTab === "overview" && (

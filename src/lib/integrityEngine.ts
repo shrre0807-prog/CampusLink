@@ -1,4 +1,4 @@
-import { StudentProfile, StudentSkill } from "../types";
+import { SkillNode } from "../types";
 
 export interface IntegrityAuditResult {
   isFlagged: boolean;
@@ -9,7 +9,7 @@ export interface IntegrityAuditResult {
   verdictTitle: string;
   verdictDescription: string;
   detectedKeywords: string[];
-  skillsBreakdown: StudentSkill[];
+  skillsBreakdown: SkillNode[];
 }
 
 const HIGH_VALUE_TECH_KEYWORDS = [
@@ -136,7 +136,7 @@ export function evaluateCandidateIntegrity(data: {
   }
 
   // Build skills breakdown with Claimed vs AST Verified disparity
-  const skillsBreakdown: StudentSkill[] = [
+  const skillsBreakdown: SkillNode[] = [
     {
       name: "Distributed Systems & Cloud Architecture",
       category: "Backend",
