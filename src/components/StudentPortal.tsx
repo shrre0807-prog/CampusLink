@@ -99,6 +99,7 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
     phone: student.phone,
     cgpa: student.cgpa,
     institution: student.institution,
+    apaarId: student.apaarId,
     githubUsername: student.githubUsername,
     resumeRawText: student.resumeRawText,
   });
@@ -441,11 +442,15 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
                   Roll No: {student.collegeRollNo || "2022-CS-042"} {isActuallyVerified ? "" : "(❌ UNVERIFIED)"}
                 </span>
                 <span
-                  title="National APAAR Sovereign Ledger access requires formal College Dean administrative permission"
-                  className="text-[10px] px-2 py-0.5 rounded bg-slate-950 text-slate-400 border border-slate-800 flex items-center gap-1"
+                  title="National APAAR Sovereign Digital ID linked with DigiLocker and Academic Bank of Credits"
+                  className={`text-[10px] px-2 py-0.5 rounded border font-mono flex items-center gap-1 ${
+                    liveAudit.isApaarValid && !liveAudit.isFlagged
+                      ? "bg-cyan-950/70 text-cyan-300 border-cyan-800/80"
+                      : "bg-rose-950/70 text-rose-300 border-rose-800 font-bold"
+                  }`}
                 >
                   <ShieldCheck className="w-3 h-3 text-cyan-400" />
-                  <span>APAAR: Gated (College Permission Required)</span>
+                  <span>APAAR: {student.apaarId || "5512-8921-4401"} {liveAudit.isApaarValid && !liveAudit.isFlagged ? "✓" : "❌"}</span>
                 </span>
               </div>
 

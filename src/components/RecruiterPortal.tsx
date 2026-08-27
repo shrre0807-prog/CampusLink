@@ -194,9 +194,11 @@ export const RecruiterPortal: React.FC<RecruiterPortalProps> = ({
                       )}
                     </div>
                     <p className="text-xs text-slate-400">{cand.institution}</p>
-                    <p className="text-[11px] text-slate-500 font-mono mt-0.5">
-                      Roll No: {cand.collegeRollNo || "2022-CS-042"}
-                    </p>
+                    <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-500 font-mono mt-0.5">
+                      <span>Roll: {cand.collegeRollNo || "2022-CS-042"}</span>
+                      <span>•</span>
+                      <span>APAAR: {cand.apaarId || "5512-8921-4401"}</span>
+                    </div>
                   </div>
 
                   {/* VCI Badge */}

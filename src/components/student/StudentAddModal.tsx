@@ -37,6 +37,7 @@ export const StudentAddModal: React.FC<StudentAddModalProps> = ({
   const [graduationYear, setGraduationYear] = useState<string>("2026");
   const [githubUsername, setGithubUsername] = useState<string>("");
   const [collegeRollNo, setCollegeRollNo] = useState<string>("2022-CS-084");
+  const [apaarId, setApaarId] = useState<string>("5512-8921-4401");
   const [abcCredits, setAbcCredits] = useState<string>("142");
   const [linkedinUrl, setLinkedinUrl] = useState<string>("");
   const [portfolioUrl, setPortfolioUrl] = useState<string>("");
@@ -58,6 +59,7 @@ export const StudentAddModal: React.FC<StudentAddModalProps> = ({
     phone,
     cgpa,
     institution,
+    apaarId,
     githubUsername,
     resumeRawText: resumeText,
     isAdversarialMode: isAdversarialTest,
@@ -112,6 +114,7 @@ export const StudentAddModal: React.FC<StudentAddModalProps> = ({
     setGraduationYear("2026");
     setGithubUsername(`poojasharma-code`);
     setCollegeRollNo(`2022-CSE-084`);
+    setApaarId(`5512-8921-4401`);
     setLinkedinUrl(`https://linkedin.com/in/pooja-sharma-dev`);
     setPortfolioUrl(`https://poojasharma.dev`);
     setBio("Full-stack engineer building resilient event-driven web platforms, distributed databases, and high-performance WebAssembly tools.");
@@ -131,6 +134,7 @@ export const StudentAddModal: React.FC<StudentAddModalProps> = ({
     setGraduationYear("2026");
     setGithubUsername(`fake-profile-none`);
     setCollegeRollNo(`TEST-UNVERIFIED-99`);
+    setApaarId(`FAKE-999-UNVERIFIED`);
     setLinkedinUrl(`https://linkedin.com/in/rohan-fake-dev`);
     setPortfolioUrl(``);
     setBio("Self-proclaimed Architect claiming Kubernetes, Kafka, Raft Consensus, Distributed Systems, Golang, Microservices, but 0 AST commits.");
@@ -158,6 +162,7 @@ Experience: Architected global multi-region cloud services handling 100M QPS (Se
       graduationYear,
       githubUsername: githubUsername.trim() || undefined,
       collegeRollNo: collegeRollNo.trim() || undefined,
+      apaarId: apaarId.trim() || undefined,
       abcCredits,
       linkedinUrl: linkedinUrl.trim() || undefined,
       portfolioUrl: portfolioUrl.trim() || undefined,
@@ -419,6 +424,17 @@ Experience: Architected global multi-region cloud services handling 100M QPS (Se
             </div>
 
             <div>
+              <label className="block text-slate-300 font-semibold mb-1">APAAR (12-Digit Student ID)</label>
+              <input
+                type="text"
+                value={apaarId}
+                onChange={(e) => setApaarId(e.target.value)}
+                placeholder="e.g. 5512-8921-4401"
+                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500 font-mono"
+              />
+            </div>
+
+            <div>
               <label className="block text-slate-300 font-semibold mb-1">ABC Academic Credits</label>
               <input
                 type="number"
@@ -429,11 +445,11 @@ Experience: Architected global multi-region cloud services handling 100M QPS (Se
             </div>
           </div>
 
-          {/* Institutional Permission Governance Note */}
+          {/* National Identity & DigiLocker Sovereignty Note */}
           <div className="p-3 bg-slate-950/80 border border-slate-800 rounded-xl flex items-start gap-2.5 text-[11px] text-slate-400">
             <ShieldCheck className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
             <div>
-              <span className="text-slate-200 font-semibold">Institutional Governance Notice:</span> Sovereign APAAR ID records are restricted and accessed only with formal College Dean / Registrar administrative permission. Student registration uses official Institutional College Roll numbers.
+              <span className="text-slate-200 font-semibold">National DigiLocker &amp; APAAR Integration:</span> 12-digit APAAR sovereign student IDs are verified with DigiLocker and matched against accredited College Institutional Roll Records.
             </div>
           </div>
 

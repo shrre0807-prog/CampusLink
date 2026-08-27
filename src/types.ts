@@ -31,7 +31,7 @@ export interface StudentProfile {
   cgpa?: number;
   graduationYear: number;
   collegeRollNo?: string;
-  apaarId?: string; // Optional legacy field - Sovereign APAAR gated by College Permission
+  apaarId?: string; // 12-digit APAAR (One Nation One Student ID) linked to DigiLocker / ABC
   digiLockerVerified: boolean;
   collegeVerified?: boolean;
   abcCredits: number;

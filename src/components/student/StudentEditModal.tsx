@@ -43,6 +43,7 @@ export const StudentEditModal: React.FC<StudentEditModalProps> = ({
     cgpa: student.cgpa ? String(student.cgpa) : "8.8",
     graduationYear: String(student.graduationYear),
     collegeRollNo: student.collegeRollNo || "2022-CS-042",
+    apaarId: student.apaarId || "5512-8921-4401",
     digiLockerVerified: student.digiLockerVerified,
     collegeVerified: student.collegeVerified ?? true,
     abcCredits: String(student.abcCredits),
@@ -65,6 +66,7 @@ export const StudentEditModal: React.FC<StudentEditModalProps> = ({
         cgpa: student.cgpa ? String(student.cgpa) : "8.8",
         graduationYear: String(student.graduationYear),
         collegeRollNo: student.collegeRollNo || "2022-CS-042",
+        apaarId: student.apaarId || "5512-8921-4401",
         digiLockerVerified: student.digiLockerVerified,
         collegeVerified: student.collegeVerified ?? true,
         abcCredits: String(student.abcCredits),
@@ -84,6 +86,7 @@ export const StudentEditModal: React.FC<StudentEditModalProps> = ({
     phone: formData.phone,
     cgpa: formData.cgpa,
     institution: formData.institution,
+    apaarId: formData.apaarId,
     githubUsername: formData.githubUsername,
     resumeRawText: student.resumeRawText,
   });
@@ -111,6 +114,7 @@ export const StudentEditModal: React.FC<StudentEditModalProps> = ({
       phone: formData.phone,
       cgpa: formData.cgpa,
       institution: formData.institution,
+      apaarId: formData.apaarId,
       githubUsername: formData.githubUsername,
       resumeRawText: student.resumeRawText,
     });
@@ -128,9 +132,9 @@ export const StudentEditModal: React.FC<StudentEditModalProps> = ({
       cgpa: parseFloat(formData.cgpa) || student.cgpa || 8.5,
       graduationYear: parseInt(formData.graduationYear, 10) || student.graduationYear,
       collegeRollNo: formData.collegeRollNo,
-      apaarId: undefined, // APAAR access gated by College Dean permission
+      apaarId: formData.apaarId,
       collegeVerified: isVerified,
-      digiLockerVerified: isVerified,
+      digiLockerVerified: isVerified && audit.isApaarValid,
       abcCredits: parseInt(formData.abcCredits, 10) || student.abcCredits,
       githubUsername: formData.githubUsername,
       linkedinUrl: formData.linkedinUrl,
@@ -295,10 +299,10 @@ export const StudentEditModal: React.FC<StudentEditModalProps> = ({
             </div>
           </div>
 
-          {/* Section 3: Institutional College Roll No & Enrollment Verification */}
+          {/* Section 3: Institutional College Roll No & APAAR Verification */}
           <div className="space-y-3 pt-2 border-t border-slate-800">
             <h4 className="font-bold text-slate-200 text-xs flex items-center gap-1.5 text-emerald-400">
-              <ShieldCheck className="w-3.5 h-3.5" /> Institutional College Enrollment
+              <ShieldCheck className="w-3.5 h-3.5" /> Institutional Enrollment &amp; Sovereign ID
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
@@ -313,32 +317,60 @@ export const StudentEditModal: React.FC<StudentEditModalProps> = ({
                 />
               </div>
 
-              <div className="flex flex-col justify-end">
-                <div className="text-[11px] text-slate-400 mb-1">Institutional Dean Status</div>
-                <div
-                  className={`flex items-center gap-2 p-2 rounded-xl border text-xs font-semibold ${
-                    liveAudit.isInstitutionalVerified && !liveAudit.isFlagged
-                      ? "bg-emerald-950/70 text-emerald-300 border-emerald-700/60"
-                      : "bg-rose-950/70 text-rose-300 border-rose-700/60"
-                  }`}
-                >
-                  {liveAudit.isInstitutionalVerified && !liveAudit.isFlagged ? (
-                    <>
-                      <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-                      <span>College Enrollment Verified</span>
-                    </>
-                  ) : (
-                    <>
-                      <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
-                      <span>❌ Unverified / Fake Credentials</span>
-                    </>
-                  )}
-                </div>
+              <div>
+                <label className="block text-slate-400 mb-1">APAAR (12-Digit Sovereign ID)</label>
+                <input
+                  type="text"
+                  name="apaarId"
+                  placeholder="5512-8921-4401"
+                  value={formData.apaarId}
+                  onChange={handleChange}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-indigo-500 font-mono"
+                />
               </div>
             </div>
-            <p className="text-[10px] text-slate-500 italic">
-              🔒 National APAAR Student ID access is gated and requires formal College Dean / Registrar administrative clearance.
-            </p>
+
+            <div className="flex flex-col sm:flex-row gap-2 pt-1">
+              <div
+                className={`flex-1 flex items-center gap-2 p-2 rounded-xl border text-xs font-semibold ${
+                  liveAudit.isInstitutionalVerified && !liveAudit.isFlagged
+                    ? "bg-emerald-950/70 text-emerald-300 border-emerald-700/60"
+                    : "bg-rose-950/70 text-rose-300 border-rose-700/60"
+                }`}
+              >
+                {liveAudit.isInstitutionalVerified && !liveAudit.isFlagged ? (
+                  <>
+                    <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <span>College Enrollment Verified</span>
+                  </>
+                ) : (
+                  <>
+                    <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+                    <span>❌ Unverified College Credentials</span>
+                  </>
+                )}
+              </div>
+
+              <div
+                className={`flex-1 flex items-center gap-2 p-2 rounded-xl border text-xs font-semibold ${
+                  liveAudit.isApaarValid && !liveAudit.isFlagged
+                    ? "bg-emerald-950/70 text-emerald-300 border-emerald-700/60"
+                    : "bg-rose-950/70 text-rose-300 border-rose-700/60"
+                }`}
+              >
+                {liveAudit.isApaarValid && !liveAudit.isFlagged ? (
+                  <>
+                    <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <span>DigiLocker KYC Matched</span>
+                  </>
+                ) : (
+                  <>
+                    <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+                    <span>❌ Invalid / Dummy APAAR ID</span>
+                  </>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Section 4: Online Profiles & Portfolios */}

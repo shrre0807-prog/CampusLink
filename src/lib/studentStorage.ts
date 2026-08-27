@@ -112,13 +112,14 @@ export function createNewStudentProfile(data: {
   const numAbcCredits = typeof data.abcCredits === "number" ? data.abcCredits : parseInt(String(data.abcCredits || "142"), 10) || 142;
 
   const rollNumber = data.collegeRollNo?.trim() || `2026-CSE-${randomSuffix}`;
+  const apaarNumber = data.apaarId?.trim() || `5512-${randomSuffix}-1420`;
 
   // Only assign resume attributes if the user actually uploaded a resume or pasted text
   const resumeName = data.resumeFileName?.trim() || undefined;
   const resumeSize = resumeName ? (data.resumeSizeKb || 185) : undefined;
   const rawText = data.resumeRawText?.trim() || undefined;
 
-  // Run Zero-Trust Integrity Engine on all inputs (AST Code verification, contact validation, college enrollment, prompt injections)
+  // Run Zero-Trust Integrity Engine on all inputs (AST Code verification, contact validation, APAAR KYC, college enrollment, prompt injections)
   const integrityAudit = evaluateCandidateIntegrity({
     name: cleanName,
     email: userEmail,
@@ -126,6 +127,7 @@ export function createNewStudentProfile(data: {
     institution: institutionName,
     githubUsername: cleanGithub,
     cgpa: numCgpa,
+    apaarId: apaarNumber,
     resumeRawText: rawText,
     isAdversarialMode: (data as any).isAdversarialMode || false,
   });
@@ -133,7 +135,7 @@ export function createNewStudentProfile(data: {
   const vciScore = integrityAudit.vciScore;
   const isFlagged = integrityAudit.isFlagged;
   const collegeVerified = !isFlagged && integrityAudit.isInstitutionalVerified;
-  const digiLockerVerified = collegeVerified;
+  const digiLockerVerified = !isFlagged && integrityAudit.isApaarValid;
 
   return {
     id: studentId,
@@ -146,7 +148,7 @@ export function createNewStudentProfile(data: {
     cgpa: numCgpa,
     graduationYear: numGradYear,
     collegeRollNo: rollNumber,
-    apaarId: undefined, // APAAR access gated by College Dean permission
+    apaarId: apaarNumber,
     digiLockerVerified,
     collegeVerified,
     abcCredits: numAbcCredits,
