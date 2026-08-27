@@ -26,16 +26,18 @@ import { StudentProfile, JobRequisition, RecruiterRejectionLog } from "../types"
 
 interface RecruiterPortalProps {
   candidates?: StudentProfile[];
+  onDeleteCandidate?: (id: string) => void;
 }
 
 export const RecruiterPortal: React.FC<RecruiterPortalProps> = ({
   candidates: propCandidates,
+  onDeleteCandidate,
 }) => {
   const [jobs, setJobs] = useState<JobRequisition[]>(SAMPLE_JOBS);
   const [selectedJob, setSelectedJob] = useState<JobRequisition>(SAMPLE_JOBS[0]);
   const candidates = propCandidates && propCandidates.length > 0 ? propCandidates : getStoredStudents();
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [minVciFilter, setMinVciFilter] = useState<number>(50);
+  const [minVciFilter, setMinVciFilter] = useState<number>(0);
   const [selectedCandidate, setSelectedCandidate] = useState<StudentProfile | null>(null);
 
   // 30-Second Rejection Modal State
@@ -171,7 +173,7 @@ export const RecruiterPortal: React.FC<RecruiterPortalProps> = ({
       {/* Candidate Pipeline Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredCandidates.map((cand) => {
-          const isGamed = cand.vciScore < 30;
+          const isGamed = cand.vciScore < 40;
           return (
             <div
               key={cand.id}
@@ -185,13 +187,15 @@ export const RecruiterPortal: React.FC<RecruiterPortalProps> = ({
                   <div>
                     <div className="flex items-center gap-2">
                       <h3 className="font-bold text-base text-slate-100">{cand.name}</h3>
-                      {cand.digiLockerVerified && (
-                        <ShieldCheck className="w-4 h-4 text-cyan-400" title="DigiLocker Verified" />
+                      {cand.digiLockerVerified ? (
+                        <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" title="DigiLocker Verified" />
+                      ) : (
+                        <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" title="Unverified Identity / No KYC" />
                       )}
                     </div>
                     <p className="text-xs text-slate-400">{cand.institution}</p>
                     <p className="text-[11px] text-slate-500 font-mono mt-0.5">
-                      APAAR: {cand.apaarId}
+                      APAAR: {cand.apaarId || "Unregistered"}
                     </p>
                   </div>
 

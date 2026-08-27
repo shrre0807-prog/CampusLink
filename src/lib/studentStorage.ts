@@ -100,79 +100,66 @@ export function createNewStudentProfile(data: {
   const randomSuffix = Math.floor(1000 + Math.random() * 9000);
   const studentId = `STU_2026_${randomSuffix}`;
 
-  const cleanGithub = (
-    data.githubUsername ||
-    cleanName.toLowerCase().replace(/[^a-z0-9]/g, "-")
-  ).trim();
-
+  const cleanGithub = (data.githubUsername || "").trim();
+  const userEmail = (data.email || "").trim();
+  const userPhone = (data.phone || "").trim();
   const institutionName = data.institution?.trim() || "National Institute of Technology (NIT)";
   const departmentName = data.department?.trim() || "Computer Science & Engineering";
   const degreeName = data.degree?.trim() || "B.Tech in Computer Science & Engineering";
-  const numCgpa = typeof data.cgpa === "number" ? data.cgpa : parseFloat(String(data.cgpa || "8.8")) || 8.8;
+  const numCgpa = typeof data.cgpa === "number" ? data.cgpa : parseFloat(String(data.cgpa || "0")) || 0;
   const numGradYear = typeof data.graduationYear === "number" ? data.graduationYear : parseInt(String(data.graduationYear || "2026"), 10) || 2026;
   const numAbcCredits = typeof data.abcCredits === "number" ? data.abcCredits : parseInt(String(data.abcCredits || "142"), 10) || 142;
 
-  const generatedApaar =
-    data.apaarId?.trim() ||
-    `${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}`;
+  const generatedApaar = data.apaarId?.trim() || "";
 
-  const resumeName = data.resumeFileName || `${cleanName.replace(/\s+/g, "_")}_Resume_2026.pdf`;
-  const resumeSize = data.resumeSizeKb || 185;
-  const rawText =
-    data.resumeRawText ||
-    `${cleanName.toUpperCase()}\n` +
-    `Email: ${data.email || `${cleanGithub}@${institutionName.toLowerCase().replace(/[^a-z]/g, "")}.edu`} | Phone: ${data.phone || "+91 98400 12345"}\n` +
-    `GitHub: github.com/${cleanGithub} | LinkedIn: ${data.linkedinUrl || `linkedin.com/in/${cleanGithub}`}\n\n` +
-    `EDUCATION\n` +
-    `${institutionName} — ${degreeName} (Class of ${numGradYear}) | CGPA: ${numCgpa}/10\n\n` +
-    `CORE COMPETENCIES & TECHNICAL SKILLS\n` +
-    `Languages & Runtimes: TypeScript, Python, Go, C++, SQL\n` +
-    `Frameworks & Systems: React, Node.js, FastAPI, Docker, PostgreSQL, Redis\n` +
-    `Tools: Git, Linux, WebAssembly, CI/CD Actions\n\n` +
-    `PROJECTS & EXPERIENCE\n` +
-    `1. High-Performance Full-Stack Service: Implemented modular architecture with Redis caching and PostgreSQL.\n` +
-    `2. Microservices Dispatch Engine: Designed asynchronous message processing with automated unit testing.\n`;
+  // Only assign resume attributes if the user actually uploaded a resume or pasted text
+  const resumeName = data.resumeFileName?.trim() || undefined;
+  const resumeSize = resumeName ? (data.resumeSizeKb || 185) : undefined;
+  const rawText = data.resumeRawText?.trim() || undefined;
 
-  // Run Zero-Trust Integrity Engine on inputs (AST Code verification, prompt injections, keyword inflation)
+  // Run Zero-Trust Integrity Engine on all inputs (AST Code verification, contact validation, sovereign ID, prompt injections)
   const integrityAudit = evaluateCandidateIntegrity({
     name: cleanName,
-    resumeRawText: data.resumeRawText || rawText,
+    email: userEmail,
+    phone: userPhone,
+    institution: institutionName,
     githubUsername: cleanGithub,
     cgpa: numCgpa,
     apaarId: generatedApaar,
-    explicitAdversarialMode: (data as any).isAdversarialMode || false,
+    resumeRawText: rawText,
+    isAdversarialMode: (data as any).isAdversarialMode || false,
   });
 
   const vciScore = integrityAudit.vciScore;
   const isFlagged = integrityAudit.isFlagged;
-  const digiLockerVerified = !isFlagged && Boolean(data.apaarId && data.apaarId.length > 8);
+  const digiLockerVerified = !isFlagged && integrityAudit.isApaarValid;
 
   return {
     id: studentId,
     name: cleanName,
-    email: data.email?.trim() || `${cleanGithub}@${institutionName.toLowerCase().replace(/[^a-z]/g, "")}.edu`,
-    phone: data.phone?.trim() || "+91 98400 12345",
+    email: userEmail || `${cleanName.toLowerCase().replace(/[^a-z0-9]/g, "")}@unverified.edu`,
+    phone: userPhone || "Unverified Phone",
     institution: institutionName,
     department: departmentName,
     degree: degreeName,
     cgpa: numCgpa,
     graduationYear: numGradYear,
-    apaarId: generatedApaar,
+    apaarId: generatedApaar || "Unverified ID",
     digiLockerVerified,
     abcCredits: numAbcCredits,
     vciScore,
-    githubUsername: cleanGithub,
-    githubScore: isFlagged ? 12 : Math.round(vciScore * 0.94),
-    linkedinUrl: data.linkedinUrl?.trim() || `https://linkedin.com/in/${cleanGithub}`,
-    portfolioUrl: data.portfolioUrl?.trim() || `https://${cleanGithub}.dev`,
-    leetcodeUsername: data.leetcodeUsername?.trim() || `${cleanGithub}_algo`,
+    githubUsername: cleanGithub || "unverified-handle",
+    githubScore: isFlagged ? 10 : Math.round(vciScore * 0.94),
+    linkedinUrl: data.linkedinUrl?.trim() || undefined,
+    portfolioUrl: data.portfolioUrl?.trim() || undefined,
+    leetcodeUsername: data.leetcodeUsername?.trim() || undefined,
     bio:
       data.bio?.trim() ||
       (isFlagged
-        ? `[AUDIT FLAGGED] Candidate claims advanced systems engineering but lacks verified GitHub AST proof-of-work telemetry.`
-        : `Ambitious ${departmentName} candidate focused on scalable software architectures, verified AST codebases, and distributed systems.`),
+        ? `[ZERO-TRUST DEFICIT] Candidate submission contains unverified details or 0-commit AST telemetry deficit.`
+        : `Candidate at ${institutionName} specializing in scalable systems, AST-proven software architectures, and automated testing.`),
     resumeFileName: resumeName,
-    resumeUploadDate: new Date().toISOString().split("T")[0],
+    resumeUploadDate: resumeName ? new Date().toISOString().split("T")[0] : undefined,
     resumeSizeKb: resumeSize,
     resumeRawText: rawText,
     projects: isFlagged
@@ -268,16 +255,24 @@ export function createNewStudentProfile(data: {
             vciMatchScore: Math.round(vciScore * 0.96),
           },
         ],
-    astStats: {
-      totalCommits: 680,
-      reposAnalyzed: 12,
-      linesOfCode: 28900,
-      entropyScore: 0.88,
-      topLanguages: [
-        { language: "TypeScript", percentage: 52 },
-        { language: "Python", percentage: 30 },
-        { language: "SQL", percentage: 18 },
-      ],
-    },
+    astStats: isFlagged
+      ? {
+          totalCommits: 0,
+          reposAnalyzed: 0,
+          linesOfCode: 0,
+          entropyScore: 0.1,
+          topLanguages: [{ language: "Unverified", percentage: 100 }],
+        }
+      : {
+          totalCommits: 680,
+          reposAnalyzed: 12,
+          linesOfCode: 28900,
+          entropyScore: 0.88,
+          topLanguages: [
+            { language: "TypeScript", percentage: 52 },
+            { language: "Python", percentage: 30 },
+            { language: "SQL", percentage: 18 },
+          ],
+        },
   };
 }

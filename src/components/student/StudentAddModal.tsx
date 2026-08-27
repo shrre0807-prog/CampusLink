@@ -9,9 +9,12 @@ import {
   RefreshCw,
   FileCheck,
   Zap,
+  AlertTriangle,
+  ShieldCheck,
 } from "lucide-react";
 import { StudentProfile } from "../../types";
 import { createNewStudentProfile } from "../../lib/studentStorage";
+import { evaluateCandidateIntegrity } from "../../lib/integrityEngine";
 
 interface StudentAddModalProps {
   isOpen: boolean;
@@ -33,9 +36,7 @@ export const StudentAddModal: React.FC<StudentAddModalProps> = ({
   const [cgpa, setCgpa] = useState<string>("8.9");
   const [graduationYear, setGraduationYear] = useState<string>("2026");
   const [githubUsername, setGithubUsername] = useState<string>("");
-  const [apaarId, setApaarId] = useState<string>(
-    `${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}`
-  );
+  const [apaarId, setApaarId] = useState<string>("");
   const [abcCredits, setAbcCredits] = useState<string>("142");
   const [linkedinUrl, setLinkedinUrl] = useState<string>("");
   const [portfolioUrl, setPortfolioUrl] = useState<string>("");
@@ -49,6 +50,19 @@ export const StudentAddModal: React.FC<StudentAddModalProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [isAdversarialTest, setIsAdversarialTest] = useState<boolean>(false);
+
+  // Real-time zero-trust fraud calculation as the user fills out details
+  const liveAudit = evaluateCandidateIntegrity({
+    name,
+    email,
+    phone,
+    cgpa,
+    institution,
+    apaarId,
+    githubUsername,
+    resumeRawText: resumeText,
+    isAdversarialMode: isAdversarialTest,
+  });
 
   if (!isOpen) return null;
 
@@ -98,6 +112,7 @@ export const StudentAddModal: React.FC<StudentAddModalProps> = ({
     setCgpa("9.2");
     setGraduationYear("2026");
     setGithubUsername(`poojasharma-code`);
+    setApaarId(`5512-8921-4401`);
     setLinkedinUrl(`https://linkedin.com/in/pooja-sharma-dev`);
     setPortfolioUrl(`https://poojasharma.dev`);
     setBio("Full-stack engineer building resilient event-driven web platforms, distributed databases, and high-performance WebAssembly tools.");
@@ -116,6 +131,7 @@ export const StudentAddModal: React.FC<StudentAddModalProps> = ({
     setCgpa("9.8");
     setGraduationYear("2026");
     setGithubUsername(`fake-profile-none`);
+    setApaarId(`FAKE-999-UNVERIFIED`);
     setLinkedinUrl(`https://linkedin.com/in/rohan-fake-dev`);
     setPortfolioUrl(``);
     setBio("Self-proclaimed Architect claiming Kubernetes, Kafka, Raft Consensus, Distributed Systems, Golang, Microservices, but 0 AST commits.");
@@ -147,9 +163,9 @@ Experience: Architected global multi-region cloud services handling 100M QPS (Se
       linkedinUrl: linkedinUrl.trim() || undefined,
       portfolioUrl: portfolioUrl.trim() || undefined,
       bio: bio.trim() || undefined,
-      resumeFileName: resumeFile ? resumeFile.name : `${finalName.replace(/\s+/g, "_")}_Resume.pdf`,
-      resumeSizeKb: resumeFile ? Math.round(resumeFile.size / 1024) : 195,
-      resumeRawText: resumeText || undefined,
+      resumeFileName: resumeFile ? resumeFile.name : (resumeText.trim() ? `${finalName.replace(/\s+/g, "_")}_Resume.txt` : undefined),
+      resumeSizeKb: resumeFile ? Math.round(resumeFile.size / 1024) : (resumeText.trim() ? Math.round(resumeText.length / 1024) || 2 : undefined),
+      resumeRawText: resumeText.trim() || undefined,
       isAdversarialMode: isAdversarialTest,
     } as any);
 
@@ -423,6 +439,59 @@ Experience: Architected global multi-region cloud services handling 100M QPS (Se
               placeholder="Brief bio or focus area (e.g. Distributed backend systems, React UI engineering, Docker)..."
               className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500"
             />
+          </div>
+
+          {/* Live Zero-Trust Fraud & Audit Inspection Box */}
+          <div
+            className={`p-3.5 rounded-xl border transition text-xs space-y-2 ${
+              liveAudit.isFlagged
+                ? "bg-rose-950/40 border-rose-800/80 text-rose-200"
+                : "bg-emerald-950/40 border-emerald-800/80 text-emerald-200"
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 font-bold">
+                {liveAudit.isFlagged ? (
+                  <>
+                    <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+                    <span>⚠️ ZERO-TRUST DEFICIT / FRAUD SIGNALS DETECTED</span>
+                  </>
+                ) : (
+                  <>
+                    <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <span>✓ ZERO-TRUST CREDENTIALS VERIFIED</span>
+                  </>
+                )}
+              </div>
+              <div
+                className={`font-mono font-extrabold px-2 py-0.5 rounded-lg text-xs ${
+                  liveAudit.isFlagged
+                    ? "bg-rose-900/60 text-rose-200 border border-rose-700"
+                    : "bg-emerald-900/60 text-emerald-200 border border-emerald-700"
+                }`}
+              >
+                Projected VCI: {liveAudit.vciScore}%
+              </div>
+            </div>
+
+            {liveAudit.isFlagged ? (
+              <div className="space-y-1 text-[11px] text-rose-300">
+                <p className="font-semibold text-rose-200">
+                  Zero-Trust Telemetry detected the following fake / unverified details:
+                </p>
+                <ul className="list-disc pl-4 space-y-0.5">
+                  {liveAudit.issues.map((iss, idx) => (
+                    <li key={idx}>
+                      <span className="font-semibold capitalize">[{iss.field}]:</span> {iss.message}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : (
+              <p className="text-[11px] text-emerald-300">
+                Valid Sovereign APAAR ID format and GitHub telemetry verified. Profile will receive genuine VCI score.
+              </p>
+            )}
           </div>
 
           {/* Action buttons */}

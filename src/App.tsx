@@ -24,7 +24,16 @@ import {
 } from "./lib/studentStorage";
 
 export default function App() {
-  const [activeRole, setActiveRole] = useState<UserRole>("dashboard");
+  // Persisted view role
+  const [activeRole, setActiveRole] = useState<UserRole>(() => {
+    try {
+      const saved = localStorage.getItem("campuslink_active_role");
+      if (saved) return saved as UserRole;
+    } catch {
+      // fallback
+    }
+    return "dashboard";
+  });
   const [activeDemoTab, setActiveDemoTab] = useState<"resume" | "wasm" | "bos">("resume");
 
   // Global persistent student cohort state
@@ -32,6 +41,15 @@ export default function App() {
   const [selectedStudentId, setSelectedStudentId] = useState<string>(() =>
     getStoredActiveStudentId()
   );
+
+  // Sync active role to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem("campuslink_active_role", activeRole);
+    } catch (err) {
+      console.error("Failed to save active role:", err);
+    }
+  }, [activeRole]);
 
   // Sync students to localStorage whenever updated
   useEffect(() => {
@@ -57,6 +75,18 @@ export default function App() {
     setStudents((prev) => {
       const updated = prev.map((s) => (s.id === updatedStudent.id ? updatedStudent : s));
       saveStoredStudents(updated);
+      return updated;
+    });
+  };
+
+  const handleDeleteStudent = (studentId: string) => {
+    setStudents((prev) => {
+      const updated = prev.filter((s) => s.id !== studentId);
+      saveStoredStudents(updated);
+      if (selectedStudentId === studentId && updated.length > 0) {
+        setSelectedStudentId(updated[0].id);
+        saveStoredActiveStudentId(updated[0].id);
+      }
       return updated;
     });
   };
@@ -132,7 +162,10 @@ export default function App() {
 
           {/* VIEW 2: RECRUITER VCI DISCOVERY GRID */}
           {activeRole === "recruiter" && (
-            <RecruiterPortal candidates={students} />
+            <RecruiterPortal
+              candidates={students}
+              onDeleteCandidate={handleDeleteStudent}
+            />
           )}
 
           {/* VIEW 3: STUDENT COCKPIT */}
@@ -143,6 +176,7 @@ export default function App() {
               onSelectStudent={(id) => setSelectedStudentId(id)}
               onAddStudent={handleAddStudent}
               onUpdateStudent={handleUpdateStudent}
+              onDeleteStudent={handleDeleteStudent}
               onResetStudents={handleResetStudents}
               onLaunchSandbox={() => {
                 setActiveRole("sandbox");

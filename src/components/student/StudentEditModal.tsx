@@ -14,8 +14,11 @@ import {
   Code2,
   X,
   CheckCircle2,
+  AlertTriangle,
+  Zap,
 } from "lucide-react";
 import { StudentProfile } from "../../types";
+import { evaluateCandidateIntegrity } from "../../lib/integrityEngine";
 
 interface StudentEditModalProps {
   student: StudentProfile;
@@ -72,6 +75,18 @@ export const StudentEditModal: React.FC<StudentEditModalProps> = ({
     }
   }, [student, isOpen]);
 
+  // Real-time zero-trust audit
+  const liveAudit = evaluateCandidateIntegrity({
+    name: formData.name,
+    email: formData.email,
+    phone: formData.phone,
+    cgpa: formData.cgpa,
+    institution: formData.institution,
+    apaarId: formData.apaarId,
+    githubUsername: formData.githubUsername,
+    resumeRawText: student.resumeRawText,
+  });
+
   if (!isOpen) return null;
 
   const handleChange = (
@@ -88,6 +103,18 @@ export const StudentEditModal: React.FC<StudentEditModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    const audit = evaluateCandidateIntegrity({
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      cgpa: formData.cgpa,
+      institution: formData.institution,
+      apaarId: formData.apaarId,
+      githubUsername: formData.githubUsername,
+      resumeRawText: student.resumeRawText,
+    });
+
     const updated: StudentProfile = {
       ...student,
       name: formData.name,
@@ -99,13 +126,15 @@ export const StudentEditModal: React.FC<StudentEditModalProps> = ({
       cgpa: parseFloat(formData.cgpa) || student.cgpa || 8.5,
       graduationYear: parseInt(formData.graduationYear, 10) || student.graduationYear,
       apaarId: formData.apaarId,
-      digiLockerVerified: formData.digiLockerVerified,
+      digiLockerVerified: audit.isApaarValid && !audit.isFlagged,
       abcCredits: parseInt(formData.abcCredits, 10) || student.abcCredits,
       githubUsername: formData.githubUsername,
       linkedinUrl: formData.linkedinUrl,
       portfolioUrl: formData.portfolioUrl,
       leetcodeUsername: formData.leetcodeUsername,
       bio: formData.bio,
+      vciScore: audit.vciScore,
+      skills: audit.skillsBreakdown,
     };
 
     onSaveStudent(updated);
@@ -367,6 +396,59 @@ export const StudentEditModal: React.FC<StudentEditModalProps> = ({
               placeholder="Summary of background, technical domain, and career objectives..."
               className="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-slate-200 focus:outline-none focus:border-indigo-500"
             />
+          </div>
+
+          {/* Real-time Zero-Trust Live Audit Box */}
+          <div
+            className={`p-3.5 rounded-xl border transition text-xs space-y-2 ${
+              liveAudit.isFlagged
+                ? "bg-rose-950/40 border-rose-800/80 text-rose-200"
+                : "bg-emerald-950/40 border-emerald-800/80 text-emerald-200"
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 font-bold">
+                {liveAudit.isFlagged ? (
+                  <>
+                    <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+                    <span>⚠️ ZERO-TRUST DEFICIT / FRAUD TELEMETRY DETECTED</span>
+                  </>
+                ) : (
+                  <>
+                    <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <span>✓ ZERO-TRUST CREDENTIALS VERIFIED</span>
+                  </>
+                )}
+              </div>
+              <div
+                className={`font-mono font-extrabold px-2 py-0.5 rounded-lg text-xs ${
+                  liveAudit.isFlagged
+                    ? "bg-rose-900/60 text-rose-200 border border-rose-700"
+                    : "bg-emerald-900/60 text-emerald-200 border border-emerald-700"
+                }`}
+              >
+                Projected VCI: {liveAudit.vciScore}%
+              </div>
+            </div>
+
+            {liveAudit.isFlagged ? (
+              <div className="space-y-1 text-[11px] text-rose-300">
+                <p className="font-semibold text-rose-200">
+                  The Zero-Trust engine will penalize this profile for the following issues:
+                </p>
+                <ul className="list-disc pl-4 space-y-0.5">
+                  {liveAudit.issues.map((iss, idx) => (
+                    <li key={idx}>
+                      <span className="font-semibold capitalize">[{iss.field}]:</span> {iss.message}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : (
+              <p className="text-[11px] text-emerald-300">
+                All fields pass Sovereign Identity &amp; GitHub AST commit telemetry checks.
+              </p>
+            )}
           </div>
 
           {/* Footer actions */}

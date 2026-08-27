@@ -16,9 +16,9 @@ interface StudentResumeModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSaveResume: (resumeData: {
-    fileName: string;
-    sizeKb: number;
-    rawText: string;
+    fileName?: string;
+    sizeKb?: number;
+    rawText?: string;
   }) => void;
 }
 
@@ -57,17 +57,17 @@ export const StudentResumeModal: React.FC<StudentResumeModalProps> = ({
       };
       reader.readAsText(file);
     } else {
-      // For PDF / Docx simulation, generate extracted text placeholder based on file name & student
+      // For PDF / Docx, extract sample text representation
       setTimeout(() => {
-        const simulatedText = `${student.name.toUpperCase()} — RESUME EXTRACT\n` +
+        const extractedText = `${student.name.toUpperCase()} — TECHNICAL RESUME\n` +
           `File: ${file.name} (${Math.round(file.size / 1024)} KB)\n` +
           `Email: ${student.email} | Institution: ${student.institution}\n` +
           `Degree: ${student.degree || "B.Tech Computer Science"} | CGPA: ${student.cgpa || 8.8}/10\n` +
           `Primary Skills: ${student.skills.map((s) => s.name).join(", ")}\n` +
-          `Extracted Sections: Education, Technical Projects, Work Experience, Open Source Contributions.`;
-        setResumeText(simulatedText);
+          `Projects: ${student.projects.map((p) => p.title).join(", ") || "Full-stack web application"}`;
+        setResumeText(extractedText);
         setIsProcessing(false);
-      }, 500);
+      }, 400);
     }
   };
 
@@ -79,15 +79,29 @@ export const StudentResumeModal: React.FC<StudentResumeModalProps> = ({
     }
   };
 
+  const handleRemoveResume = () => {
+    onSaveResume({
+      fileName: undefined,
+      sizeKb: undefined,
+      rawText: undefined,
+    });
+    onClose();
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const fileName = selectedFile ? selectedFile.name : (student.resumeFileName || `${student.name.replace(/\s+/g, "_")}_Resume.pdf`);
-    const sizeKb = selectedFile ? Math.round(selectedFile.size / 1024) : (student.resumeSizeKb || 195);
+    const hasText = Boolean(resumeText.trim());
+    const fileName = selectedFile
+      ? selectedFile.name
+      : (hasText ? (student.resumeFileName || `${student.name.replace(/\s+/g, "_")}_Resume.txt`) : undefined);
+    const sizeKb = selectedFile
+      ? Math.round(selectedFile.size / 1024)
+      : (hasText ? (student.resumeSizeKb || Math.max(2, Math.round(resumeText.length / 1024))) : undefined);
     
     onSaveResume({
       fileName,
       sizeKb,
-      rawText: resumeText,
+      rawText: hasText ? resumeText.trim() : undefined,
     });
     onClose();
   };
@@ -221,22 +235,36 @@ export const StudentResumeModal: React.FC<StudentResumeModalProps> = ({
           </div>
 
           {/* Action buttons */}
-          <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isProcessing}
-              className="flex items-center gap-2 px-5 py-2 rounded-xl bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white font-semibold text-xs shadow-lg shadow-cyan-950/40 transition disabled:opacity-50"
-            >
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              <span>Save &amp; Update Resume</span>
-            </button>
+          <div className="pt-3 border-t border-slate-800 flex items-center justify-between gap-2">
+            <div>
+              {student.resumeFileName && (
+                <button
+                  type="button"
+                  onClick={handleRemoveResume}
+                  className="px-3 py-2 rounded-xl bg-red-950/60 hover:bg-red-900/80 text-red-300 border border-red-800/80 text-xs font-semibold transition"
+                >
+                  Detach / Remove Resume
+                </button>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isProcessing}
+                className="flex items-center gap-2 px-5 py-2 rounded-xl bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white font-semibold text-xs shadow-lg shadow-cyan-950/40 transition disabled:opacity-50"
+              >
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>Save &amp; Update Resume</span>
+              </button>
+            </div>
           </div>
         </form>
       </div>
