@@ -2,8 +2,8 @@ import { StudentProfile } from "../types";
 import { SAMPLE_STUDENTS } from "../data/mockData";
 import { evaluateCandidateIntegrity } from "./integrityEngine";
 
-const STORAGE_KEY = "campuslink_students_v2";
-const ACTIVE_STUDENT_KEY = "campuslink_active_student_id_v2";
+const STORAGE_KEY = "campuslink_students_v3";
+const ACTIVE_STUDENT_KEY = "campuslink_active_student_id_v3";
 
 /**
  * Retrieves all student profiles from persistent browser storage,

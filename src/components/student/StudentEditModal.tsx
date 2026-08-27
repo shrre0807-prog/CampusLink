@@ -309,20 +309,27 @@ export const StudentEditModal: React.FC<StudentEditModalProps> = ({
                 />
               </div>
 
-              <div className="flex items-center gap-3 pt-6">
-                <input
-                  type="checkbox"
-                  id="digiLockerVerified"
-                  name="digiLockerVerified"
-                  checked={formData.digiLockerVerified}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, digiLockerVerified: e.target.checked }))
-                  }
-                  className="w-4 h-4 rounded text-emerald-500 bg-slate-950 border-slate-700 focus:ring-0 cursor-pointer"
-                />
-                <label htmlFor="digiLockerVerified" className="text-slate-300 font-medium cursor-pointer">
-                  DigiLocker KYC &amp; Aadhaar Verified
-                </label>
+              <div className="flex flex-col justify-end">
+                <div className="text-[11px] text-slate-400 mb-1">DigiLocker KYC Status (Zero-Trust)</div>
+                <div
+                  className={`flex items-center gap-2 p-2 rounded-xl border text-xs font-semibold ${
+                    liveAudit.isApaarValid && !liveAudit.isFlagged
+                      ? "bg-emerald-950/70 text-emerald-300 border-emerald-700/60"
+                      : "bg-rose-950/70 text-rose-300 border-rose-700/60"
+                  }`}
+                >
+                  {liveAudit.isApaarValid && !liveAudit.isFlagged ? (
+                    <>
+                      <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <span>DigiLocker KYC Validated</span>
+                    </>
+                  ) : (
+                    <>
+                      <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+                      <span>❌ Unverified / Fake ID Detected</span>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           </div>

@@ -104,6 +104,8 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
     resumeRawText: student.resumeRawText,
   });
 
+  const isActuallyVerified = !liveAudit.isFlagged && liveAudit.isApaarValid && student.digiLockerVerified;
+
   const setSelectedStudentId = (id: string) => {
     if (onSelectStudent) {
       onSelectStudent(id);
@@ -144,6 +146,9 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
   }) => {
     const integrityAudit = evaluateCandidateIntegrity({
       name: student.name,
+      email: student.email,
+      phone: student.phone,
+      institution: student.institution,
       resumeRawText: resumeData.rawText,
       githubUsername: student.githubUsername,
       cgpa: student.cgpa,
@@ -210,6 +215,9 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
   const handleSaveStudentDetails = (updatedStudent: StudentProfile) => {
     const integrityAudit = evaluateCandidateIntegrity({
       name: updatedStudent.name,
+      email: updatedStudent.email,
+      phone: updatedStudent.phone,
+      institution: updatedStudent.institution,
       resumeRawText: updatedStudent.resumeRawText,
       githubUsername: updatedStudent.githubUsername,
       cgpa: updatedStudent.cgpa,
@@ -413,17 +421,23 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
             <div className="space-y-1.5">
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="text-2xl font-bold text-slate-100">{student.name}</h1>
-                {student.digiLockerVerified ? (
-                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold bg-emerald-950/80 text-emerald-300 px-2 py-0.5 rounded-md border border-emerald-700/60">
+                {isActuallyVerified ? (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold bg-emerald-950/80 text-emerald-300 px-2.5 py-0.5 rounded-md border border-emerald-700/60">
                     <ShieldCheck className="w-3.5 h-3.5" /> DigiLocker KYC Verified
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold bg-amber-950/80 text-amber-300 px-2 py-0.5 rounded-md border border-amber-700/60">
-                    <AlertTriangle className="w-3.5 h-3.5" /> Unverified Sovereign ID
+                  <span className="inline-flex items-center gap-1 text-[11px] font-bold bg-rose-950/90 text-rose-200 px-2.5 py-0.5 rounded-md border border-rose-700/80">
+                    <AlertTriangle className="w-3.5 h-3.5 text-rose-400" /> ❌ Unverified Sovereign ID (DigiLocker Failed)
                   </span>
                 )}
-                <span className="text-xs bg-slate-800 text-slate-300 px-2 py-0.5 rounded border border-slate-700 font-mono">
-                  APAAR: {student.apaarId || "Unregistered"}
+                <span
+                  className={`text-xs px-2 py-0.5 rounded border font-mono ${
+                    isActuallyVerified
+                      ? "bg-slate-800 text-slate-300 border-slate-700"
+                      : "bg-rose-950/70 text-rose-300 border-rose-800 font-bold"
+                  }`}
+                >
+                  APAAR: {student.apaarId || "Unregistered"} {isActuallyVerified ? "" : "(❌ FAKE / UNVERIFIED)"}
                 </span>
               </div>
 
@@ -754,35 +768,58 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
         </button>
       </div>
 
-      {/* ADVERSARIAL FRAUD AUDIT CALLOUT (Shown if student is flagged / low VCI) */}
-      {student.vciScore < 40 && (
-        <div className="bg-gradient-to-r from-rose-950/80 via-slate-900 to-amber-950/70 border-2 border-rose-600/60 rounded-2xl p-5 shadow-2xl space-y-4">
+      {/* ADVERSARIAL FRAUD AUDIT CALLOUT (Shown if student is flagged / unverified / low VCI) */}
+      {(!isActuallyVerified || liveAudit.isFlagged || student.vciScore < 50 || liveAudit.issues.length > 0) && (
+        <div className="bg-gradient-to-r from-rose-950/90 via-slate-900 to-rose-950/80 border-2 border-rose-600/70 rounded-2xl p-5 shadow-2xl space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-rose-900/50">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-rose-600/30 border border-rose-500/50 flex items-center justify-center text-rose-400 shrink-0">
-                <AlertTriangle className="w-6 h-6 animate-pulse" />
+                <AlertTriangle className="w-6 h-6 animate-pulse text-rose-400" />
               </div>
               <div>
                 <h3 className="text-sm font-bold text-rose-200 flex items-center gap-2">
-                  <span>ZERO-TRUST INTEGRITY AUDIT: ADVERSARIAL INFLATION DETECTED</span>
+                  <span>ZERO-TRUST INTEGRITY AUDIT: FRAUD / DEFICIT DETECTED</span>
                   <span className="text-[10px] bg-rose-950 text-rose-300 border border-rose-700 px-2 py-0.5 rounded-full font-mono font-normal">
-                    Confidence: Critical Deficit
+                    Status: Unverified / Flagged
                   </span>
                 </h3>
                 <p className="text-xs text-slate-300 mt-0.5">
-                  How CampusLink caught this unverified/fake profile when traditional keyword ATS systems failed:
+                  CampusLink identified anomalies in the submitted details and sovereign registry checksums:
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-2 font-mono text-xs">
               <div className="px-3 py-1 bg-slate-950 border border-slate-700 rounded-lg text-slate-400">
-                Traditional ATS: <strong className="text-emerald-400">98% Match</strong>
+                Traditional ATS: <strong className="text-amber-400">{liveAudit.traditionalTfIdfMatch}% Match</strong>
               </div>
               <div className="px-3 py-1 bg-rose-950 border border-rose-800 rounded-lg text-rose-300">
-                CampusLink VCI: <strong className="text-rose-400 font-extrabold">{student.vciScore}% Verified</strong>
+                CampusLink VCI: <strong className="text-rose-400 font-extrabold">{student.vciScore}% (Penalized)</strong>
               </div>
             </div>
           </div>
+
+          {/* Dynamic Detected Issues List */}
+          {liveAudit.issues.length > 0 && (
+            <div className="bg-slate-950/90 rounded-xl p-3.5 border border-rose-900/60 space-y-2">
+              <div className="text-xs font-bold text-rose-300 flex items-center gap-1.5">
+                <AlertTriangle className="w-3.5 h-3.5 text-rose-400" />
+                <span>Active Flagged Anomalies &amp; Verification Failures ({liveAudit.issues.length}):</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {liveAudit.issues.map((issue, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-start gap-2 text-xs bg-rose-950/40 p-2 rounded-lg border border-rose-900/40"
+                  >
+                    <span className="px-1.5 py-0.5 bg-rose-900/60 text-rose-300 rounded font-mono text-[10px] uppercase font-bold shrink-0">
+                      {issue.field}
+                    </span>
+                    <span className="text-slate-300 text-[11px] leading-tight">{issue.message}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
             <div className="bg-slate-950/80 p-3.5 rounded-xl border border-rose-900/40 space-y-1.5">
@@ -791,27 +828,27 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
                 <span>AST Code Telemetry Deficit</span>
               </div>
               <p className="text-[11px] text-slate-400 leading-relaxed">
-                Resume claims enterprise competencies (Kubernetes, Kafka, Distributed Systems), but GitHub AST analysis found <strong>0 commits, 0 test suites, and 0 AST syntax trees</strong>.
+                Claimed technical competencies lack verifiable GitHub public AST syntax tree commits or unit test coverage.
               </p>
             </div>
 
             <div className="bg-slate-950/80 p-3.5 rounded-xl border border-rose-900/40 space-y-1.5">
               <div className="font-bold text-amber-300 flex items-center gap-1.5">
                 <span className="w-5 h-5 rounded-full bg-amber-900/80 flex items-center justify-center text-[10px] text-white">2</span>
-                <span>White-Font &amp; Prompt Injection Trap</span>
+                <span>DigiLocker KYC Gate</span>
               </div>
               <p className="text-[11px] text-slate-400 leading-relaxed">
-                CampusLink&apos;s raw text tokenizer extracted hidden system override directives that bypass naive keyword scrapers but trigger immediate zero-trust penalties.
+                Candidate Sovereign APAAR ID failed checksum or is not certified in the accredited institutional ledger.
               </p>
             </div>
 
             <div className="bg-slate-950/80 p-3.5 rounded-xl border border-rose-900/40 space-y-1.5">
               <div className="font-bold text-cyan-300 flex items-center gap-1.5">
                 <span className="w-5 h-5 rounded-full bg-cyan-900/80 flex items-center justify-center text-[10px] text-white">3</span>
-                <span>DigiLocker &amp; Sandbox Gate</span>
+                <span>Remediation Required</span>
               </div>
               <p className="text-[11px] text-slate-400 leading-relaxed">
-                Unverified candidate is blocked from enterprise recruiter shortlists until they pass live interactive coding verification in the browser WASM sandbox.
+                Candidate must complete interactive browser WASM sandbox challenges to prove claimed programming competencies.
               </p>
             </div>
           </div>
@@ -983,8 +1020,14 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
                     Academic Bank of Credits (ABC) &amp; NCrF
                   </h3>
                 </div>
-                <span className="text-[11px] px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800 font-mono">
-                  Level 5 Aligned
+                <span
+                  className={`text-[11px] px-2 py-0.5 rounded font-mono ${
+                    isActuallyVerified
+                      ? "bg-emerald-950 text-emerald-300 border border-emerald-800"
+                      : "bg-rose-950 text-rose-300 border border-rose-800 font-bold"
+                  }`}
+                >
+                  {isActuallyVerified ? "Level 5 Aligned" : "❌ Sovereign Ledger Anomaly"}
                 </span>
               </div>
 
@@ -995,17 +1038,21 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
                 </div>
                 <div className="flex justify-between py-1.5 border-b border-slate-800">
                   <span className="text-slate-400">National APAAR ID:</span>
-                  <strong className="text-slate-200 font-mono">{student.apaarId}</strong>
+                  <strong
+                    className={`font-mono ${isActuallyVerified ? "text-slate-200" : "text-rose-400 font-bold"}`}
+                  >
+                    {student.apaarId || "Unregistered"} {isActuallyVerified ? "(Verified)" : "(❌ FAILED KYC)"}
+                  </strong>
                 </div>
                 <div className="flex justify-between py-1.5 border-b border-slate-800">
                   <span className="text-slate-400">DigiLocker Identity:</span>
-                  {student.digiLockerVerified ? (
+                  {isActuallyVerified ? (
                     <span className="text-emerald-400 font-semibold flex items-center gap-1">
                       <Check className="w-3.5 h-3.5" /> Authenticated &amp; KYC Matched
                     </span>
                   ) : (
-                    <span className="text-amber-400 font-semibold flex items-center gap-1">
-                      <AlertTriangle className="w-3.5 h-3.5" /> Unverified Sovereign ID
+                    <span className="text-rose-400 font-bold flex items-center gap-1">
+                      <AlertTriangle className="w-3.5 h-3.5" /> ❌ Unverified / Fake APAAR ID (DigiLocker Failed)
                     </span>
                   )}
                 </div>
