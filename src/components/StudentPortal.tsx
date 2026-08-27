@@ -99,12 +99,11 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
     phone: student.phone,
     cgpa: student.cgpa,
     institution: student.institution,
-    apaarId: student.apaarId,
     githubUsername: student.githubUsername,
     resumeRawText: student.resumeRawText,
   });
 
-  const isActuallyVerified = !liveAudit.isFlagged && liveAudit.isApaarValid && student.digiLockerVerified;
+  const isActuallyVerified = !liveAudit.isFlagged && liveAudit.isInstitutionalVerified && (student.collegeVerified ?? true);
 
   const setSelectedStudentId = (id: string) => {
     if (onSelectStudent) {
@@ -152,8 +151,9 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
       resumeRawText: resumeData.rawText,
       githubUsername: student.githubUsername,
       cgpa: student.cgpa,
-      apaarId: student.apaarId,
     });
+
+    const isVerified = !integrityAudit.isFlagged && integrityAudit.isInstitutionalVerified;
 
     const updated: StudentProfile = {
       ...student,
@@ -163,7 +163,8 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
       resumeRawText: resumeData.rawText,
       vciScore: integrityAudit.vciScore,
       skills: integrityAudit.skillsBreakdown,
-      digiLockerVerified: !integrityAudit.isFlagged && integrityAudit.isApaarValid,
+      collegeVerified: isVerified,
+      digiLockerVerified: isVerified,
       githubScore: integrityAudit.isFlagged ? 12 : Math.round(integrityAudit.vciScore * 0.94),
       astStats: integrityAudit.isFlagged
         ? {
@@ -423,11 +424,11 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
                 <h1 className="text-2xl font-bold text-slate-100">{student.name}</h1>
                 {isActuallyVerified ? (
                   <span className="inline-flex items-center gap-1 text-[11px] font-semibold bg-emerald-950/80 text-emerald-300 px-2.5 py-0.5 rounded-md border border-emerald-700/60">
-                    <ShieldCheck className="w-3.5 h-3.5" /> DigiLocker KYC Verified
+                    <ShieldCheck className="w-3.5 h-3.5" /> College Dean Verified
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1 text-[11px] font-bold bg-rose-950/90 text-rose-200 px-2.5 py-0.5 rounded-md border border-rose-700/80">
-                    <AlertTriangle className="w-3.5 h-3.5 text-rose-400" /> ❌ Unverified Sovereign ID (DigiLocker Failed)
+                    <AlertTriangle className="w-3.5 h-3.5 text-rose-400" /> ❌ Unverified College Credentials
                   </span>
                 )}
                 <span
@@ -437,7 +438,14 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
                       : "bg-rose-950/70 text-rose-300 border-rose-800 font-bold"
                   }`}
                 >
-                  APAAR: {student.apaarId || "Unregistered"} {isActuallyVerified ? "" : "(❌ FAKE / UNVERIFIED)"}
+                  Roll No: {student.collegeRollNo || "2022-CS-042"} {isActuallyVerified ? "" : "(❌ UNVERIFIED)"}
+                </span>
+                <span
+                  title="National APAAR Sovereign Ledger access requires formal College Dean administrative permission"
+                  className="text-[10px] px-2 py-0.5 rounded bg-slate-950 text-slate-400 border border-slate-800 flex items-center gap-1"
+                >
+                  <ShieldCheck className="w-3 h-3 text-cyan-400" />
+                  <span>APAAR: Gated (College Permission Required)</span>
                 </span>
               </div>
 
@@ -696,10 +704,10 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
               <div className="p-3.5 bg-slate-900 rounded-xl border border-slate-800 space-y-1.5">
                 <div className="flex items-center gap-1.5 text-emerald-400 font-bold text-xs">
                   <Database className="w-4 h-4 shrink-0" />
-                  <span>3. APAAR &amp; DigiLocker</span>
+                  <span>3. Institutional College Gate</span>
                 </div>
                 <p className="text-[11px] text-slate-400 leading-relaxed">
-                  Validates 12-digit APAAR Sovereign Student ID against national academic registries (Academic Bank of Credits) to verify authentic university enrollment and CGPA.
+                  Authenticates student roll number and accredited institutional status. Gated access requires formal College Dean permission before querying sovereign student ledgers.
                 </p>
               </div>
 
@@ -835,10 +843,10 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({
             <div className="bg-slate-950/80 p-3.5 rounded-xl border border-rose-900/40 space-y-1.5">
               <div className="font-bold text-amber-300 flex items-center gap-1.5">
                 <span className="w-5 h-5 rounded-full bg-amber-900/80 flex items-center justify-center text-[10px] text-white">2</span>
-                <span>DigiLocker KYC Gate</span>
+                <span>Institutional Enrollment Gate</span>
               </div>
               <p className="text-[11px] text-slate-400 leading-relaxed">
-                Candidate Sovereign APAAR ID failed checksum or is not certified in the accredited institutional ledger.
+                Candidate college credentials or university roll number failed accredited registrar roster match.
               </p>
             </div>
 

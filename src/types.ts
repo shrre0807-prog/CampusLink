@@ -30,8 +30,10 @@ export interface StudentProfile {
   degree?: string;
   cgpa?: number;
   graduationYear: number;
-  apaarId: string;
+  collegeRollNo?: string;
+  apaarId?: string; // Optional legacy field - Sovereign APAAR gated by College Permission
   digiLockerVerified: boolean;
+  collegeVerified?: boolean;
   abcCredits: number;
   vciScore: number; // 0-100
   githubUsername: string;

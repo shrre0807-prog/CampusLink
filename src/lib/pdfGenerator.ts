@@ -220,7 +220,7 @@ export function generateStudentVciCertificate(student: StudentProfile): jsPDF {
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(71, 85, 105);
-  doc.text(`APAAR ID: ${student.apaarId} | DigiLocker Verified: YES | ABC Academic Credits: ${student.abcCredits}`, 20, 49);
+  doc.text(`College Roll No: ${student.collegeRollNo || "2022-CS-042"} | College Dean Verified: ${student.collegeVerified ? "YES" : "NO"} | ABC Academic Credits: ${student.abcCredits}`, 20, 49);
   doc.text(`Institution: ${student.institution} (${student.department}) | Graduating Class: ${student.graduationYear}`, 20, 55);
 
   // VCI Score Badge

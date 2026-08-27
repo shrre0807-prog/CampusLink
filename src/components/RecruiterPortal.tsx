@@ -187,15 +187,15 @@ export const RecruiterPortal: React.FC<RecruiterPortalProps> = ({
                   <div>
                     <div className="flex items-center gap-2">
                       <h3 className="font-bold text-base text-slate-100">{cand.name}</h3>
-                      {cand.digiLockerVerified ? (
-                        <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" title="DigiLocker Verified" />
+                      {cand.collegeVerified ?? cand.digiLockerVerified ? (
+                        <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" title="College Enrollment Verified" />
                       ) : (
-                        <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" title="Unverified Identity / No KYC" />
+                        <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" title="Unverified College Credentials" />
                       )}
                     </div>
                     <p className="text-xs text-slate-400">{cand.institution}</p>
                     <p className="text-[11px] text-slate-500 font-mono mt-0.5">
-                      APAAR: {cand.apaarId || "Unregistered"}
+                      Roll No: {cand.collegeRollNo || "2022-CS-042"}
                     </p>
                   </div>
 

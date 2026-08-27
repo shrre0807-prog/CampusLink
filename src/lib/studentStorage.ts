@@ -85,6 +85,7 @@ export function createNewStudentProfile(data: {
   cgpa?: number | string;
   graduationYear?: number | string;
   githubUsername?: string;
+  collegeRollNo?: string;
   linkedinUrl?: string;
   portfolioUrl?: string;
   leetcodeUsername?: string;
@@ -110,14 +111,14 @@ export function createNewStudentProfile(data: {
   const numGradYear = typeof data.graduationYear === "number" ? data.graduationYear : parseInt(String(data.graduationYear || "2026"), 10) || 2026;
   const numAbcCredits = typeof data.abcCredits === "number" ? data.abcCredits : parseInt(String(data.abcCredits || "142"), 10) || 142;
 
-  const generatedApaar = data.apaarId?.trim() || "";
+  const rollNumber = data.collegeRollNo?.trim() || `2026-CSE-${randomSuffix}`;
 
   // Only assign resume attributes if the user actually uploaded a resume or pasted text
   const resumeName = data.resumeFileName?.trim() || undefined;
   const resumeSize = resumeName ? (data.resumeSizeKb || 185) : undefined;
   const rawText = data.resumeRawText?.trim() || undefined;
 
-  // Run Zero-Trust Integrity Engine on all inputs (AST Code verification, contact validation, sovereign ID, prompt injections)
+  // Run Zero-Trust Integrity Engine on all inputs (AST Code verification, contact validation, college enrollment, prompt injections)
   const integrityAudit = evaluateCandidateIntegrity({
     name: cleanName,
     email: userEmail,
@@ -125,14 +126,14 @@ export function createNewStudentProfile(data: {
     institution: institutionName,
     githubUsername: cleanGithub,
     cgpa: numCgpa,
-    apaarId: generatedApaar,
     resumeRawText: rawText,
     isAdversarialMode: (data as any).isAdversarialMode || false,
   });
 
   const vciScore = integrityAudit.vciScore;
   const isFlagged = integrityAudit.isFlagged;
-  const digiLockerVerified = !isFlagged && integrityAudit.isApaarValid;
+  const collegeVerified = !isFlagged && integrityAudit.isInstitutionalVerified;
+  const digiLockerVerified = collegeVerified;
 
   return {
     id: studentId,
@@ -144,8 +145,10 @@ export function createNewStudentProfile(data: {
     degree: degreeName,
     cgpa: numCgpa,
     graduationYear: numGradYear,
-    apaarId: generatedApaar || "Unverified ID",
+    collegeRollNo: rollNumber,
+    apaarId: undefined, // APAAR access gated by College Dean permission
     digiLockerVerified,
+    collegeVerified,
     abcCredits: numAbcCredits,
     vciScore,
     githubUsername: cleanGithub || "unverified-handle",
